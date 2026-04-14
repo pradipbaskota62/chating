@@ -2,15 +2,28 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus Chat Pro | Admin & AI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexus Chat Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; color: white; overflow: hidden; }
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #020617; 
+            color: white; 
+            overflow: hidden; 
+            /* Pull-to-refresh रोक्नका लागि */
+            overscroll-behavior-y: contain; 
+        }
+
         .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        
         #chat-box::-webkit-scrollbar { width: 4px; }
         #chat-box::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
+        
+        /* Selection रोक्न (Optional) */
+        * { -webkit-tap-highlight-color: transparent; }
     </style>
 </head>
 <body class="h-screen flex items-center justify-center p-2">
@@ -20,31 +33,31 @@
         <span class="text-4xl font-black -rotate-12">N</span>
     </div>
     <h1 class="text-3xl font-black mb-1 tracking-tighter">NEXUS PRO</h1>
-    <p class="text-slate-500 text-[10px] font-bold tracking-[0.2em] mb-8">AI POWERED MESSENGER</p>
+    <p class="text-slate-500 text-[10px] font-bold tracking-[0.2em] mb-8">SECURE ECOSYSTEM</p>
 
     <div class="space-y-4">
         <button onclick="loginWithGoogle()" class="w-full flex items-center justify-center gap-3 bg-white text-slate-900 p-4 rounded-2xl font-bold active:scale-95 transition">
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20">
             Sign in with Google
         </button>
-        <div class="text-slate-600 text-[10px] font-bold uppercase">Or Join with Nickname</div>
-        <input type="text" id="nickname-input" placeholder="Your Nickname" class="w-full p-4 bg-slate-900/50 border border-slate-800 rounded-2xl outline-none focus:border-blue-500 text-center">
-        <button onclick="loginAnon()" class="w-full bg-slate-800 p-4 rounded-2xl font-bold hover:bg-slate-700 active:scale-95 transition">Enter Room</button>
+        <div class="text-slate-600 text-[10px] font-bold uppercase">Or Nickname</div>
+        <input type="text" id="nickname-input" placeholder="Your Nickname" class="w-full p-4 bg-slate-900/50 border border-slate-800 rounded-2xl outline-none text-center">
+        <button onclick="loginAnon()" class="w-full bg-slate-800 p-4 rounded-2xl font-bold active:scale-95 transition">Enter Room</button>
     </div>
 </div>
 
 <div id="chat-app" class="hidden flex flex-col h-full w-full max-w-2xl glass rounded-[2.5rem] overflow-hidden">
     <div class="p-5 border-b border-white/5 flex justify-between items-center bg-slate-900/40">
         <div class="flex items-center gap-3">
-            <div id="user-img" class="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center font-bold shadow-lg shadow-blue-500/20">?</div>
+            <div id="user-img" class="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center font-bold">?</div>
             <div>
                 <p id="display-name" class="font-bold text-sm">User</p>
-                <p id="user-status" class="text-[10px] text-emerald-400 font-bold tracking-widest uppercase">● Active Now</p>
+                <p class="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">● Active Now</p>
             </div>
         </div>
         <div class="flex gap-2">
-            <button id="admin-btn" onclick="toggleAdminPanel()" class="hidden p-2 bg-amber-500/10 text-amber-500 rounded-lg text-[10px] font-black uppercase border border-amber-500/20">Admin</button>
-            <button onclick="logout()" class="p-2 bg-red-500/10 text-red-500 rounded-lg text-[10px] font-black uppercase">Exit</button>
+            <button id="admin-btn" onclick="toggleAdminPanel()" class="hidden p-2 bg-amber-500/10 text-amber-500 rounded-lg text-[10px] font-black border border-amber-500/20">ADMIN</button>
+            <button onclick="logout()" class="p-2 bg-red-500/10 text-red-500 rounded-lg text-[10px] font-black">EXIT</button>
         </div>
     </div>
 
@@ -52,31 +65,14 @@
 
     <div class="p-4 bg-slate-900/60 border-t border-white/5">
         <div class="flex gap-2 items-center">
-            <label class="cursor-pointer p-3 bg-slate-800 rounded-2xl hover:bg-slate-700 transition">
+            <label class="p-3 bg-slate-800 rounded-2xl">
                 <input type="file" id="file-input" class="hidden" onchange="uploadFile(this)">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"></path></svg>
             </label>
-            <input type="text" id="msg-input" placeholder="Type @ai for help..." class="flex-1 p-4 bg-slate-800 rounded-2xl outline-none text-sm border border-transparent focus:border-blue-500/50 transition">
-            <button onclick="handleSend()" class="bg-blue-600 p-4 rounded-2xl shadow-xl shadow-blue-600/20 active:scale-90 transition">
+            <input type="text" id="msg-input" placeholder="Message..." class="flex-1 p-4 bg-slate-800 rounded-2xl outline-none text-sm">
+            <button onclick="handleSend()" class="bg-blue-600 p-4 rounded-2xl shadow-xl active:scale-90 transition">
                 <svg width="20" height="20" fill="white" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
             </button>
-        </div>
-    </div>
-</div>
-
-<div id="admin-panel" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-    <div class="glass w-full max-w-md p-6 rounded-[2rem]">
-        <h2 class="text-xl font-black mb-4 flex justify-between">Admin Settings <button onclick="toggleAdminPanel()">×</button></h2>
-        <div class="space-y-4">
-            <div class="p-4 bg-red-500/10 rounded-xl border border-red-500/20">
-                <p class="text-xs font-bold text-red-400 mb-2 uppercase">Ban User by UID</p>
-                <div class="flex gap-2">
-                    <input type="text" id="ban-uid" placeholder="Enter User UID" class="flex-1 p-2 bg-black rounded-lg text-xs outline-none">
-                    <button onclick="banUser()" class="bg-red-600 px-4 py-2 rounded-lg text-xs font-bold">BAN</button>
-                </div>
-            </div>
-            <div id="user-list" class="max-h-40 overflow-y-auto text-[10px] space-y-2">
-                </div>
         </div>
     </div>
 </div>
@@ -103,27 +99,14 @@
     const storage = getStorage(app);
     const provider = new GoogleAuthProvider();
 
-    const ADMIN_EMAIL = "Pradipbaskota62@gmail.com";
-
-    // --- Auth Logic ---
-    window.loginWithGoogle = () => signInWithPopup(auth, provider).catch(alert);
-    window.loginAnon = async () => {
-        const name = document.getElementById('nickname-input').value;
-        if(!name) return alert("Enter nickname!");
-        const res = await signInAnonymously(auth);
-        await updateProfile(res.user, { displayName: name });
-        window.location.reload();
-    };
-    window.logout = () => signOut(auth);
-
-    onAuthStateChanged(auth, (user) => {
-        if(user) {
-            checkBanStatus(user.uid);
+    // Admin Check
+    onAuthStateChanged(auth, (u) => {
+        if(u) {
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('chat-app').classList.remove('hidden');
-            document.getElementById('display-name').innerText = user.displayName || "Nexus User";
-            document.getElementById('user-img').innerText = (user.displayName || "N").charAt(0);
-            if(user.email === ADMIN_EMAIL) document.getElementById('admin-btn').classList.remove('hidden');
+            document.getElementById('display-name').innerText = u.displayName || "Nexus User";
+            document.getElementById('user-img').innerText = (u.displayName || "N").charAt(0);
+            if(u.email === "Pradipbaskota62@gmail.com") document.getElementById('admin-btn').classList.remove('hidden');
             loadMessages();
         } else {
             document.getElementById('auth-screen').classList.remove('hidden');
@@ -131,81 +114,80 @@
         }
     });
 
-    // --- Ban System ---
-    function checkBanStatus(uid) {
-        onValue(ref(db, 'banned/' + uid), (s) => {
-            if(s.exists()) {
-                alert("You are BANNED from this chat!");
-                signOut(auth);
-            }
-        });
-    }
-
-    window.banUser = () => {
-        const uid = document.getElementById('ban-uid').value;
-        if(uid) set(ref(db, 'banned/' + uid), true).then(() => alert("User Banned!"));
+    window.loginWithGoogle = () => signInWithPopup(auth, provider);
+    window.loginAnon = async () => {
+        const name = document.getElementById('nickname-input').value;
+        if(!name) return;
+        const res = await signInAnonymously(auth);
+        await updateProfile(res.user, { displayName: name });
+        location.reload();
     };
+    window.logout = () => signOut(auth);
 
-    window.toggleAdminPanel = () => document.getElementById('admin-panel').classList.toggle('hidden');
-
-    // --- Messaging & AI ---
-    window.handleSend = async () => {
+    window.handleSend = () => {
         const input = document.getElementById('msg-input');
         const text = input.value.trim();
         if(!text) return;
-
-        // Push User Message
-        sendMessage(text, 'text');
+        
+        push(ref(db, 'messages'), {
+            uid: auth.currentUser.uid,
+            name: auth.currentUser.displayName,
+            content: text,
+            type: 'text',
+            time: serverTimestamp()
+        });
         input.value = "";
 
-        // AI System Trigger
-        if(text.toLowerCase().startsWith('@ai')) {
+        if(text.startsWith('@ai')) {
             setTimeout(() => {
-                sendMessage("🤖 AI: I am Nexus AI. I'm here to help you!", 'text', "Nexus AI");
+                push(ref(db, 'messages'), {
+                    uid: 'ai-bot',
+                    name: '🤖 Nexus AI',
+                    content: "Hello! I am your AI assistant. How can I help you?",
+                    type: 'text',
+                    time: serverTimestamp()
+                });
             }, 1000);
         }
     };
 
-    function sendMessage(content, type, senderName = null) {
-        push(ref(db, 'messages'), {
-            uid: senderName ? "ai-system" : auth.currentUser.uid,
-            name: senderName || auth.currentUser.displayName,
-            content: content,
-            type: type,
-            time: serverTimestamp()
-        });
-    }
-
-    // --- File Manager ---
     window.uploadFile = async (el) => {
         const file = el.files[0];
         if(!file) return;
-        const fileRef = sRef(storage, 'uploads/' + Date.now() + file.name);
-        alert("Uploading...");
+        const fileRef = sRef(storage, 'uploads/' + Date.now());
         await uploadBytes(fileRef, file);
         const url = await getDownloadURL(fileRef);
-        sendMessage(url, 'image');
+        push(ref(db, 'messages'), {
+            uid: auth.currentUser.uid,
+            name: auth.currentUser.displayName,
+            content: url,
+            type: 'image',
+            time: serverTimestamp()
+        });
     };
 
-    // --- Message Loader ---
     function loadMessages() {
         const box = document.getElementById('chat-box');
         box.innerHTML = "";
         onChildAdded(ref(db, 'messages'), (d) => {
             const m = d.val();
             const isMe = m.uid === auth.currentUser?.uid;
-            const div = document.createElement('div');
-            div.className = `flex ${isMe ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`;
             
-            let contentHtml = m.type === 'image' 
-                ? `<img src="${m.content}" class="rounded-xl max-w-full shadow-lg" onclick="window.open('${m.content}')">`
-                : `<p class="text-sm leading-relaxed">${m.content}</p>`;
+            // Fix: content नभए text देखाउने, दुवै नभए 'Empty Message' देखाउने
+            const messageBody = m.content || m.text || "Empty message";
+            
+            const div = document.createElement('div');
+            div.className = `flex ${isMe ? 'justify-end' : 'justify-start'}`;
+            
+            let html = m.type === 'image' 
+                ? `<img src="${messageBody}" class="rounded-xl max-w-full">`
+                : `<p class="text-sm">${messageBody}</p>`;
 
             div.innerHTML = `
                 <div class="max-w-[85%]">
-                    <p class="text-[9px] font-bold text-slate-500 mb-1 px-2 ${isMe ? 'text-right' : ''}">${m.name} <span class="opacity-40 font-normal">(${m.uid.substring(0,5)})</span></p>
-                    <div class="p-3 rounded-2xl ${isMe ? 'bg-blue-600 text-white rounded-tr-none shadow-blue-500/20' : 'bg-slate-800 text-slate-200 rounded-tl-none shadow-black/20'} shadow-xl">
-                        ${contentHtml}
+                    <p class="text-[9px] font-bold text-slate-500 mb-1 px-2 ${isMe ? 'text-right' : ''}">${m.name}</p>
+                    <div class="p-3 rounded-2xl ${isMe ? 'bg-blue-600 rounded-tr-none' : 'bg-slate-800 rounded-tl-none'} shadow-xl">
+                        ${html}
                     </div>
                 </div>
             `;

@@ -3,86 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus Chat | Secure Login</title>
+    <title>Nexus Chat | Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: white; }
         #chat-box::-webkit-scrollbar { width: 4px; }
         #chat-box::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
-        #toast { visibility: hidden; min-width: 250px; background: #1e293b; color: #fff; text-align: center; border-radius: 12px; padding: 16px; position: fixed; z-index: 100; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 14px; }
-        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
-        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
-        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
     </style>
 </head>
-<body class="h-screen flex flex-col items-center justify-center">
+<body class="h-screen flex items-center justify-center p-4">
 
-<div id="toast">Notice</div>
-
-<div id="auth-screen" class="fixed inset-0 z-40 flex flex-col items-center justify-center p-6 bg-white">
-    <div class="text-center mb-10">
-        <div class="w-20 h-20 bg-blue-600 rounded-[2rem] mx-auto flex items-center justify-center shadow-2xl rotate-12 mb-4">
-            <span class="text-white text-4xl font-black -rotate-12">N</span>
-        </div>
-        <h1 class="text-3xl font-black text-slate-800 tracking-tighter">NEXUS CHAT</h1>
-        <p class="text-slate-400 text-[10px] font-bold tracking-widest uppercase mt-1">Join the Nexus</p>
+<div id="auth-screen" class="w-full max-w-sm p-8 glass rounded-[2.5rem] text-center shadow-2xl">
+    <div class="w-20 h-20 bg-blue-600 rounded-3xl mx-auto flex items-center justify-center mb-6 shadow-lg rotate-12">
+        <span class="text-4xl font-black -rotate-12">N</span>
     </div>
+    <h1 class="text-2xl font-black mb-2 uppercase tracking-widest">Nexus Chat</h1>
+    <p class="text-slate-400 text-xs mb-8">Secure & Global Communication</p>
 
-    <div class="w-full max-w-sm space-y-3">
-        <div id="signup-fields" class="hidden">
-            <input type="text" id="reg-name" placeholder="Full Name" class="w-full p-4 border rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50">
-        </div>
-        <input type="email" id="auth-email" placeholder="Email Address" class="w-full p-4 border rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50">
-        <input type="password" id="auth-pass" placeholder="Password" class="w-full p-4 border rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50">
-        
-        <button onclick="handleAuth()" id="main-auth-btn" class="w-full bg-blue-600 text-white p-4 rounded-2xl font-bold shadow-lg active:scale-95 transition">Login</button>
-        
-        <div class="relative flex py-4 items-center">
-            <div class="flex-grow border-t border-slate-200"></div>
-            <span class="flex-shrink mx-4 text-slate-300 text-xs font-bold">OR</span>
-            <div class="flex-grow border-t border-slate-200"></div>
-        </div>
-
-        <button onclick="loginWithGoogle()" class="w-full flex items-center justify-center gap-3 border border-slate-200 p-4 rounded-2xl bg-white transition active:scale-95 hover:bg-slate-50">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20"> 
-            <span class="font-bold text-slate-700">Continue with Google</span>
+    <div class="space-y-4">
+        <button onclick="loginWithGoogle()" class="w-full flex items-center justify-center gap-3 bg-white text-slate-900 p-4 rounded-2xl font-bold shadow-lg active:scale-95 transition">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20">
+            Continue with Google
         </button>
-
-        <div class="flex justify-center pt-2 text-xs">
-            <a href="javascript:void(0)" onclick="toggleAuthMode()" id="toggle-link" class="text-blue-500 font-bold underline">Create Account</a>
+        
+        <div class="relative flex py-2 items-center">
+            <div class="flex-grow border-t border-slate-700"></div>
+            <span class="flex-shrink mx-4 text-slate-500 text-[10px] font-bold">OR ANONYMOUS</span>
+            <div class="flex-grow border-t border-slate-700"></div>
         </div>
+
+        <input type="text" id="anon-name" placeholder="Enter Nickname" class="w-full p-4 bg-slate-800 border border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 text-white">
+        <button onclick="loginAnonymously()" class="w-full bg-blue-600 p-4 rounded-2xl font-bold active:scale-95 transition shadow-lg">Join Chat</button>
     </div>
 </div>
 
-<div id="chat-screen" class="hidden flex flex-col h-screen w-full max-w-md bg-white shadow-2xl">
-    <div class="p-4 border-b flex justify-between items-center bg-white sticky top-0 z-10">
+<div id="chat-screen" class="hidden flex flex-col h-full w-full max-w-md glass rounded-[2.5rem] overflow-hidden shadow-2xl">
+    <div class="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
         <div class="flex items-center gap-3">
-            <div id="user-avatar" class="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-bold">?</div>
+            <div id="u-avatar" class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center font-bold">?</div>
             <div>
-                <span id="display-name" class="font-black text-slate-800 block text-sm">User</span>
-                <span class="text-[10px] text-green-500 font-bold">● Online</span>
+                <p id="u-name" class="font-bold text-sm">User</p>
+                <p class="text-[10px] text-blue-400 font-bold tracking-widest uppercase">Nexus Online</p>
             </div>
         </div>
-        <button onclick="logout()" class="text-[10px] font-black text-red-500 border border-red-100 px-3 py-2 rounded-lg">LOGOUT</button>
+        <button onclick="logout()" class="p-2 bg-red-500/10 text-red-500 rounded-xl text-[10px] font-black uppercase">Exit</button>
     </div>
 
-    <div id="chat-box" class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50"></div>
+    <div id="chat-box" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
 
-    <div class="p-4 bg-white border-t flex items-center gap-2">
-        <input type="text" id="messageInput" placeholder="Write a message..." class="flex-1 p-3 bg-slate-100 rounded-2xl outline-none text-sm">
-        <button onclick="sendMessage()" class="bg-blue-600 text-white p-4 rounded-2xl shadow-lg active:scale-90 transition">
-            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+    <div class="p-4 bg-slate-900/50 border-t border-slate-800 flex gap-2">
+        <input type="text" id="msgInput" placeholder="Type message..." class="flex-1 p-4 bg-slate-800 rounded-2xl outline-none text-sm border border-slate-700">
+        <button onclick="sendMsg()" class="bg-blue-600 p-4 rounded-2xl shadow-lg active:scale-90 transition">
+            <svg width="20" height="20" fill="white" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
         </button>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInAnonymously, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getDatabase, ref, push, onChildAdded, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    // तपाईंको आफ्नै Firebase Config यहाँ पक्का गर्नुहोस्
     const firebaseConfig = {
         apiKey: "AIzaSyAwIMw7wuHVRdBtIhT1zCgh5bDLdslVpZw",
         authDomain: "chatingg-b948f.firebaseapp.com",
@@ -98,39 +81,26 @@
     const db = getDatabase(app);
     const provider = new GoogleAuthProvider();
 
-    let isLoginMode = true;
-
-    const showToast = (m) => { const t = document.getElementById("toast"); t.innerText = m; t.className = "show"; setTimeout(()=>t.className="", 3000); };
-
-    window.toggleAuthMode = () => {
-        isLoginMode = !isLoginMode;
-        document.getElementById('signup-fields').classList.toggle('hidden', isLoginMode);
-        document.getElementById('main-auth-btn').innerText = isLoginMode ? "Login" : "Register";
-        document.getElementById('toggle-link').innerText = isLoginMode ? "Create Account" : "Back to Login";
-    };
-
-    window.handleAuth = async () => {
-        const e = document.getElementById('auth-email').value, p = document.getElementById('auth-pass').value;
-        if(!e || !p) return showToast("Please fill all fields");
+    window.loginWithGoogle = () => signInWithPopup(auth, provider).catch(e => alert(e.message));
+    
+    window.loginAnonymously = async () => {
+        const name = document.getElementById('anon-name').value;
+        if(!name) return alert("Enter a name first!");
         try {
-            if (isLoginMode) await signInWithEmailAndPassword(auth, e, p);
-            else {
-                const n = document.getElementById('reg-name').value;
-                const res = await createUserWithEmailAndPassword(auth, e, p);
-                await updateProfile(res.user, { displayName: n });
-            }
-        } catch (err) { showToast(err.message); }
+            const res = await signInAnonymously(auth);
+            await updateProfile(res.user, { displayName: name });
+            location.reload(); // Refresh to apply name
+        } catch(e) { alert(e.message); }
     };
 
-    window.loginWithGoogle = () => signInWithPopup(auth, provider).catch(e => showToast(e.message));
     window.logout = () => signOut(auth);
 
     onAuthStateChanged(auth, (u) => {
         if (u) {
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('chat-screen').classList.remove('hidden');
-            document.getElementById('display-name').innerText = u.displayName || "Nexus User";
-            document.getElementById('user-avatar').innerText = (u.displayName || "N").charAt(0).toUpperCase();
+            document.getElementById('u-name').innerText = u.displayName || "Anonymous";
+            document.getElementById('u-avatar').innerText = (u.displayName || "A").charAt(0).toUpperCase();
             loadMessages();
         } else {
             document.getElementById('auth-screen').classList.remove('hidden');
@@ -138,30 +108,30 @@
         }
     });
 
-    window.sendMessage = () => {
-        const i = document.getElementById('messageInput');
-        if (i.value.trim()) {
+    window.sendMsg = () => {
+        const input = document.getElementById('msgInput');
+        if (input.value.trim()) {
             push(ref(db, 'messages'), {
                 uid: auth.currentUser.uid,
-                name: auth.currentUser.displayName || "User",
-                text: i.value,
-                timestamp: Date.now()
+                name: auth.currentUser.displayName || "Anonymous",
+                text: input.value,
+                time: serverTimestamp()
             });
-            i.value = "";
+            input.value = "";
         }
     };
 
     function loadMessages() {
         const box = document.getElementById('chat-box');
-        box.innerHTML = ""; 
+        box.innerHTML = "";
         onChildAdded(ref(db, 'messages'), (d) => {
             const m = d.val();
             const isMe = m.uid === auth.currentUser?.uid;
             const div = document.createElement('div');
             div.className = `flex ${isMe ? 'justify-end' : 'justify-start'}`;
             div.innerHTML = `
-                <div class="p-3 rounded-2xl max-w-[80%] ${isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white border text-slate-800 rounded-tl-none'} shadow-sm">
-                    <p class="text-[9px] font-bold opacity-70">${m.name}</p>
+                <div class="p-3 rounded-2xl max-w-[80%] ${isMe ? 'bg-blue-600 rounded-tr-none' : 'glass rounded-tl-none'}">
+                    <p class="text-[9px] font-bold opacity-50 mb-1">${m.name}</p>
                     <p class="text-sm">${m.text}</p>
                 </div>
             `;
@@ -169,31 +139,10 @@
             box.scrollTop = box.scrollHeight;
         });
     }
-
 </script>
 </body>
 </html>
-
-    window.processReset = async () => {
-        const email = document.getElementById('reset-email-input').value;
-        if(!email) return showToast("Enter your email");
-        showLoader(true);
-        try {
-            await sendPasswordResetEmail(auth, email);
-            showToast("Success! Real reset link sent to your email.");
-            closeForgotModal();
-        } catch(e) { showToast(e.message); }
-        showLoader(false);
-    };
-
-    window.handleAuth = async () => {
-        const e = document.getElementById('auth-email').value, p = document.getElementById('auth-pass').value;
-        if(!e || !p) return showToast("Fill all fields");
-        showLoader(true);
-        try {
-            if (isLoginMode) await signInWithEmailAndPassword(auth, e, p);
-            else {
-                const n = document.getElementById('reg-name').value;
+     const n = document.getElementById('reg-name').value;
                 const res = await createUserWithEmailAndPassword(auth, e, p);
                 await updateProfile(res.user, { displayName: n });
                 await update(ref(db, `users/${res.user.uid}`), { name: n, email: e });

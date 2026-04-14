@@ -3,152 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus Ultimate Messenger</title>
+    <title>Nexus Messenger Fix</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; color: white; height: 100vh; overflow: hidden; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; color: white; height: 100vh; overflow: hidden; }
         .glass { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .screen { display: none; height: calc(100vh - 70px); flex-direction: column; }
-        .screen.active { display: flex; }
-        .msg-action-menu { position: absolute; z-index: 100; background: #1e293b; border-radius: 12px; padding: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body class="flex flex-col h-screen">
 
-<div id="update-overlay" class="hidden fixed inset-0 z-[200] bg-blue-600 flex flex-col items-center justify-center text-center p-6">
-    <div class="animate-bounce text-6xl mb-4">🚀</div>
-    <h1 class="text-2xl font-black">APP UPLOADED!</h1>
-    <p class="text-blue-100 mt-2">New features have been added. The app will restart now.</p>
-</div>
-
-<div id="msg-menu" class="hidden fixed inset-0 z-[150] bg-black/50 flex items-center justify-center">
-    <div class="glass p-4 rounded-3xl w-64 space-y-2">
-        <button onclick="handleMsgAction('reply')" class="w-full p-3 text-left hover:bg-white/5 rounded-xl text-sm font-bold">💬 Reply</button>
-        <button onclick="handleMsgAction('react')" class="w-full p-3 text-left hover:bg-white/5 rounded-xl text-sm font-bold">❤️ React</button>
-        <button onclick="handleMsgAction('delete')" class="w-full p-3 text-left hover:bg-red-500/20 text-red-500 rounded-xl text-sm font-bold">🗑️ Delete for me</button>
-        <button onclick="closeMsgMenu()" class="w-full p-3 text-center text-slate-500 text-xs font-bold uppercase">Cancel</button>
+<div id="auth-screen" class="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950 p-4">
+    <div class="w-full max-w-sm p-8 glass rounded-[2.5rem] text-center">
+        <h1 class="text-3xl font-black mb-8 text-blue-500">NEXUS LOGIN</h1>
+        <div class="space-y-4">
+            <button onclick="loginWithGoogle()" class="w-full bg-white text-black p-4 rounded-2xl font-bold flex items-center justify-center gap-3">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20"> Google Login
+            </button>
+            <div class="text-slate-500 text-xs">OR</div>
+            <input type="text" id="nickname-input" placeholder="Enter Nickname" class="w-full p-4 bg-slate-900 border border-slate-800 rounded-2xl outline-none text-center">
+            <button onclick="loginAnon()" class="w-full bg-blue-600 p-4 rounded-2xl font-bold">Enter Messenger</button>
+        </div>
     </div>
 </div>
 
-<div id="public-screen" class="screen active">
-    <div id="public-box" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+<div id="main-app" class="hidden flex flex-col h-full">
+    <div class="p-4 border-b border-white/5 flex justify-between items-center glass">
+        <h2 class="font-bold">Nexus Messenger</h2>
+        <button onclick="logout()" class="text-red-500 text-xs font-bold">LOGOUT</button>
+    </div>
+
+    <div id="user-list" class="flex-1 overflow-y-auto p-4 space-y-2">
+        <p class="text-center text-slate-500 text-xs">Searching for users...</p>
+    </div>
+
+    <div class="h-20 border-t border-white/5 bg-slate-950 flex justify-around items-center">
+        <button onclick="location.reload()">🌐 Public</button>
+        <button onclick="alert('Profile Loading...')">👤 Profile</button>
+    </div>
+</div>
+
+<div id="chat-ui" class="hidden fixed inset-0 z-[100] bg-slate-950 flex flex-col">
+    <div class="p-4 flex items-center gap-3 border-b border-white/5 glass">
+        <button onclick="closeChat()" class="p-2">⬅️</button>
+        <div id="target-name" class="font-bold">Chat</div>
+    </div>
+    <div id="chat-box" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
     <div class="p-4 bg-slate-900 flex gap-2">
-        <input type="text" id="public-input" placeholder="Message to public..." class="flex-1 p-4 bg-slate-800 rounded-2xl outline-none">
-        <button onclick="sendPublicMsg()" class="bg-blue-600 p-4 rounded-2xl">➡️</button>
+        <input type="text" id="msg-input" placeholder="Type a message..." class="flex-1 p-4 bg-slate-800 rounded-2xl outline-none">
+        <button onclick="sendMsg()" class="bg-blue-600 p-4 rounded-2xl">Send</button>
     </div>
-</div>
-
-<div id="private-screen" class="screen">
-    <div id="private-list" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
-    <button onclick="showFriendSelector('private')" class="fixed bottom-24 right-6 w-14 h-14 bg-blue-600 rounded-full shadow-xl flex items-center justify-center text-2xl font-bold">+</button>
-</div>
-
-<div id="group-screen" class="screen">
-    <div id="group-list" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
-    <button onclick="showFriendSelector('group')" class="fixed bottom-24 right-6 w-14 h-14 bg-blue-600 rounded-full shadow-xl flex items-center justify-center text-2xl font-bold">+</button>
-</div>
-
-<div id="profile-screen" class="screen overflow-y-auto">
-    <div class="p-8 flex flex-col items-center">
-        <div class="relative group">
-            <div id="prof-img" class="w-24 h-24 bg-slate-800 rounded-[2rem] flex items-center justify-center text-3xl font-bold border-2 border-blue-500">?</div>
-            <label class="absolute bottom-0 right-0 p-2 bg-blue-600 rounded-lg cursor-pointer">
-                <input type="file" class="hidden" onchange="updateProfilePic(this)">📸
-            </label>
-        </div>
-        <h2 id="prof-name" class="mt-4 text-xl font-black">User Name</h2>
-        <p id="prof-id" class="text-xs text-blue-500 font-bold uppercase tracking-widest">nexus-id-loading</p>
-        <p id="prof-bio" class="mt-2 text-slate-400 text-xs italic">No bio added yet.</p>
-        
-        <div class="flex gap-8 mt-6 border-y border-white/5 w-full justify-center py-4">
-            <div class="text-center">
-                <p class="font-black text-lg">0</p>
-                <p class="text-[10px] text-slate-500 uppercase font-bold">Followers</p>
-            </div>
-            <div class="text-center">
-                <p class="font-black text-lg">0</p>
-                <p class="text-[10px] text-slate-500 uppercase font-bold">Following</p>
-            </div>
-        </div>
-        
-        <button onclick="editProfile()" class="mt-6 w-full p-4 glass rounded-2xl text-xs font-bold uppercase tracking-widest">Edit Profile</button>
-    </div>
-</div>
-
-<div class="h-[70px] border-t border-white/5 bg-slate-950 flex justify-around items-center px-4">
-    <button onclick="showScreen('public')" class="flex flex-col items-center gap-1 opacity-50" id="nav-public"><span>🌐</span><span class="text-[8px]">PUBLIC</span></button>
-    <button onclick="showScreen('private')" class="flex flex-col items-center gap-1 opacity-50" id="nav-private"><span>💬</span><span class="text-[8px]">PRIVATE</span></button>
-    <button onclick="showScreen('group')" class="flex flex-col items-center gap-1 opacity-50" id="nav-group"><span>👥</span><span class="text-[8px]">GROUPS</span></button>
-    <button onclick="showScreen('profile')" class="flex flex-col items-center gap-1 opacity-50" id="nav-profile"><span>👤</span><span class="text-[8px]">PROFILE</span></button>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getDatabase, ref, push, onChildAdded, set, onValue, serverTimestamp, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInAnonymously, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getDatabase, ref, push, onChildAdded, set, onValue, serverTimestamp, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    // --- CONFIG & INIT ---
-    const firebaseConfig = { /* Your Existing Config */ };
+    // IMPORTANT: Use your correct Firebase Config here
+    const firebaseConfig = {
+        apiKey: "AIzaSyAwIMw7wuHVRdBtIhT1zCgh5bDLdslVpZw",
+        authDomain: "chatingg-b948f.firebaseapp.com",
+        databaseURL: "https://chatingg-b948f-default-rtdb.firebaseio.com",
+        projectId: "chatingg-b948f",
+        storageBucket: "chatingg-b948f.appspot.com",
+        messagingSenderId: "676265332731",
+        appId: "1:676265332731:web:90468c1d0158026abfc55e"
+    };
+
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
+    const provider = new GoogleAuthProvider();
 
-    let longPressTimer;
-    let selectedMsgId = null;
+    let selectedUid = null;
+    let chatId = null;
 
-    // --- AUTO UPDATE SYSTEM ---
-    const APP_VERSION = "2.0"; // Increment this to trigger update
-    onValue(ref(db, 'app_settings/version'), (snap) => {
-        if(snap.exists() && snap.val() !== APP_VERSION) {
-            document.getElementById('update-overlay').classList.remove('hidden');
-            setTimeout(() => location.reload(), 3000);
+    // LOGIN LOGIC
+    window.loginWithGoogle = () => signInWithPopup(auth, provider);
+    window.loginAnon = async () => {
+        const name = document.getElementById('nickname-input').value;
+        if(!name) return alert("Enter name!");
+        const res = await signInAnonymously(auth);
+        await updateProfile(res.user, { displayName: name });
+        location.reload();
+    };
+    window.logout = () => signOut(auth).then(() => location.reload());
+
+    onAuthStateChanged(auth, (user) => {
+        if(user) {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            set(ref(db, 'users/' + user.uid), { uid: user.uid, name: user.displayName, status: 'online' });
+            loadUserList();
         }
     });
 
-    // --- NAVIGATION & SCREENS ---
-    window.showScreen = (name) => {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(name + '-screen').classList.add('active');
-        document.querySelectorAll('button[id^="nav-"]').forEach(b => b.style.opacity = "0.5");
-        document.getElementById('nav-' + name).style.opacity = "1";
-    };
-
-    // --- MESSAGE ACTIONS (2s LONG PRESS) ---
-    window.initLongPress = (msgId) => {
-        longPressTimer = setTimeout(() => {
-            selectedMsgId = msgId;
-            document.getElementById('msg-menu').classList.remove('hidden');
-        }, 2000); // 2 Seconds
-    };
-    window.clearLongPress = () => clearTimeout(longPressTimer);
-    window.closeMsgMenu = () => document.getElementById('msg-menu').classList.add('hidden');
-
-    window.handleMsgAction = (type) => {
-        if(type === 'delete') {
-            // Local delete for 'Delete for me' logic
-            alert("Message deleted for you.");
-        }
-        closeMsgMenu();
-    };
-
-    // --- MESSAGING WITH SEEN SYSTEM ---
-    function sendMessage(path, data) {
-        const msgRef = push(ref(db, path));
-        set(msgRef, { ...data, id: msgRef.key, status: 'sent', time: serverTimestamp() });
+    // CHAT LOGIC
+    function loadUserList() {
+        onValue(ref(db, 'users'), (snap) => {
+            const list = document.getElementById('user-list');
+            list.innerHTML = "";
+            snap.forEach(c => {
+                const u = c.val();
+                if(u.uid === auth.currentUser.uid) return;
+                const div = document.createElement('div');
+                div.className = "p-4 glass rounded-2xl flex items-center gap-3 cursor-pointer";
+                div.onclick = () => openChat(u.uid, u.name);
+                div.innerHTML = `<div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center font-bold">${u.name.charAt(0)}</div><div><p class="font-bold">${u.name}</p></div>`;
+                list.appendChild(div);
+            });
+        });
     }
 
-    // --- PROFILE ---
-    window.editProfile = () => {
-        const newBio = prompt("Enter your bio:");
-        if(newBio) {
-            update(ref(db, 'users/' + auth.currentUser.uid), { bio: newBio });
-            document.getElementById('prof-bio').innerText = newBio;
-        }
+    window.openChat = (uid, name) => {
+        selectedUid = uid;
+        document.getElementById('target-name').innerText = name;
+        document.getElementById('chat-ui').classList.remove('hidden');
+        chatId = auth.currentUser.uid < uid ? auth.currentUser.uid + "_" + uid : uid + "_" + auth.currentUser.uid;
+        loadMessages();
     };
 
-    // Initialize (Default screen)
-    showScreen('public');
+    window.closeChat = () => document.getElementById('chat-ui').classList.add('hidden');
+
+    window.sendMsg = () => {
+        const input = document.getElementById('msg-input');
+        if(!input.value || !chatId) return;
+        const mRef = push(ref(db, 'chats/' + chatId));
+        set(mRef, { id: mRef.key, sender: auth.currentUser.uid, text: input.value, status: 'sent', time: serverTimestamp() });
+        input.value = "";
+    };
+
+    function loadMessages() {
+        const box = document.getElementById('chat-box');
+        box.innerHTML = "";
+        onChildAdded(ref(db, 'chats/' + chatId), (snap) => {
+            const m = snap.val();
+            const isMe = m.sender === auth.currentUser.uid;
+            
+            // Mark as SEEN
+            if(!isMe && m.status !== 'seen') {
+                update(ref(db, `chats/${chatId}/${m.id}`), { status: 'seen' });
+            }
+
+            const div = document.createElement('div');
+            div.className = `flex ${isMe ? 'justify-end' : 'justify-start'}`;
+            div.innerHTML = `<div class="p-3 rounded-2xl max-w-[80%] ${isMe ? 'bg-blue-600' : 'bg-slate-800'}">
+                <p class="text-sm">${m.text}</p>
+                ${isMe ? `<span class="text-[8px] opacity-50 uppercase">${m.status}</span>` : ''}
+            </div>`;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        });
+    }
 </script>
 </body>
 </html>

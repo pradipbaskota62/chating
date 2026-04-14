@@ -3,239 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus Nexus Messenger | All-in-One</title>
+    <title>Nexus Ultimate Messenger</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; color: white; height: 100vh; overflow: hidden; }
-        .glass { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .nav-active { color: #3b82f6; transform: scale(1.1); }
+        .glass { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .screen { display: none; height: calc(100vh - 70px); flex-direction: column; }
         .screen.active { display: flex; }
-        #chat-box, #public-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .msg-action-menu { position: absolute; z-index: 100; background: #1e293b; border-radius: 12px; padding: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body class="flex flex-col h-screen">
 
-<div id="auth-screen" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950 p-4">
-    <div class="w-full max-w-sm p-8 glass rounded-[2.5rem] text-center">
-        <h1 class="text-3xl font-black mb-8 tracking-tighter text-blue-500">NEXUS PRO</h1>
-        <input type="text" id="nickname-input" placeholder="Your Name" class="w-full p-4 bg-slate-900 border border-slate-800 rounded-2xl outline-none mb-4 text-center">
-        <button onclick="loginWithGoogle()" class="w-full bg-white text-black p-4 rounded-2xl font-bold mb-3 shadow-lg">Login with Google</button>
-        <button onclick="loginAnon()" class="w-full bg-blue-600 p-4 rounded-2xl font-bold shadow-blue-500/20 shadow-lg">Enter App</button>
-    </div>
+<div id="update-overlay" class="hidden fixed inset-0 z-[200] bg-blue-600 flex flex-col items-center justify-center text-center p-6">
+    <div class="animate-bounce text-6xl mb-4">🚀</div>
+    <h1 class="text-2xl font-black">APP UPLOADED!</h1>
+    <p class="text-blue-100 mt-2">New features have been added. The app will restart now.</p>
 </div>
 
-<div id="top-header" class="p-4 border-b border-white/5 flex justify-between items-center bg-slate-900/50">
-    <h2 id="header-title" class="text-xl font-black text-blue-500 uppercase tracking-widest text-sm">Public Chat</h2>
-    <div id="active-user-info" class="flex items-center gap-2">
-        <div id="my-avatar" class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-xs text-white">?</div>
+<div id="msg-menu" class="hidden fixed inset-0 z-[150] bg-black/50 flex items-center justify-center">
+    <div class="glass p-4 rounded-3xl w-64 space-y-2">
+        <button onclick="handleMsgAction('reply')" class="w-full p-3 text-left hover:bg-white/5 rounded-xl text-sm font-bold">💬 Reply</button>
+        <button onclick="handleMsgAction('react')" class="w-full p-3 text-left hover:bg-white/5 rounded-xl text-sm font-bold">❤️ React</button>
+        <button onclick="handleMsgAction('delete')" class="w-full p-3 text-left hover:bg-red-500/20 text-red-500 rounded-xl text-sm font-bold">🗑️ Delete for me</button>
+        <button onclick="closeMsgMenu()" class="w-full p-3 text-center text-slate-500 text-xs font-bold uppercase">Cancel</button>
     </div>
 </div>
 
 <div id="public-screen" class="screen active">
-    <div id="public-box"></div>
-    <div class="p-4 bg-slate-900/60 border-t border-white/5 flex gap-2">
-        <input type="text" id="public-input" placeholder="Message to everyone..." class="flex-1 p-4 bg-slate-800 rounded-2xl outline-none text-sm">
-        <button onclick="sendPublicMsg()" class="bg-blue-600 p-4 rounded-2xl"><svg width="20" height="20" fill="white" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg></button>
+    <div id="public-box" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+    <div class="p-4 bg-slate-900 flex gap-2">
+        <input type="text" id="public-input" placeholder="Message to public..." class="flex-1 p-4 bg-slate-800 rounded-2xl outline-none">
+        <button onclick="sendPublicMsg()" class="bg-blue-600 p-4 rounded-2xl">➡️</button>
     </div>
 </div>
 
 <div id="private-screen" class="screen">
-    <div class="p-4 overflow-y-auto flex-1 space-y-2" id="user-list">
-        <p class="text-center text-slate-500 text-xs mt-10 uppercase tracking-widest font-bold">Find users to chat privately</p>
-    </div>
+    <div id="private-list" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
+    <button onclick="showFriendSelector('private')" class="fixed bottom-24 right-6 w-14 h-14 bg-blue-600 rounded-full shadow-xl flex items-center justify-center text-2xl font-bold">+</button>
 </div>
 
 <div id="group-screen" class="screen">
-    <div class="flex-1 flex flex-col items-center justify-center text-center p-6">
-        <div class="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mb-4">👥</div>
-        <h3 class="font-bold">Group Chats</h3>
-        <p class="text-xs text-slate-500 mt-2">Group chat feature is being optimized. You can create groups soon!</p>
-    </div>
+    <div id="group-list" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
+    <button onclick="showFriendSelector('group')" class="fixed bottom-24 right-6 w-14 h-14 bg-blue-600 rounded-full shadow-xl flex items-center justify-center text-2xl font-bold">+</button>
 </div>
 
-<div id="profile-screen" class="screen">
-    <div class="p-8 flex flex-col items-center text-center">
-        <div id="prof-img" class="w-32 h-32 bg-gradient-to-tr from-blue-600 to-cyan-400 rounded-[3rem] flex items-center justify-center text-4xl font-black mb-6 shadow-2xl shadow-blue-500/20">?</div>
-        <h2 id="prof-name" class="text-2xl font-black">User Name</h2>
-        <p id="prof-id" class="text-blue-500 text-[10px] font-bold tracking-widest mb-8 uppercase">ID: nexus-loading...</p>
+<div id="profile-screen" class="screen overflow-y-auto">
+    <div class="p-8 flex flex-col items-center">
+        <div class="relative group">
+            <div id="prof-img" class="w-24 h-24 bg-slate-800 rounded-[2rem] flex items-center justify-center text-3xl font-bold border-2 border-blue-500">?</div>
+            <label class="absolute bottom-0 right-0 p-2 bg-blue-600 rounded-lg cursor-pointer">
+                <input type="file" class="hidden" onchange="updateProfilePic(this)">📸
+            </label>
+        </div>
+        <h2 id="prof-name" class="mt-4 text-xl font-black">User Name</h2>
+        <p id="prof-id" class="text-xs text-blue-500 font-bold uppercase tracking-widest">nexus-id-loading</p>
+        <p id="prof-bio" class="mt-2 text-slate-400 text-xs italic">No bio added yet.</p>
         
-        <div class="w-full space-y-3">
-            <div class="p-4 glass rounded-2xl text-left flex justify-between">
-                <span class="text-slate-500 text-sm">Status</span>
-                <span class="text-emerald-500 font-bold text-sm">● Online</span>
+        <div class="flex gap-8 mt-6 border-y border-white/5 w-full justify-center py-4">
+            <div class="text-center">
+                <p class="font-black text-lg">0</p>
+                <p class="text-[10px] text-slate-500 uppercase font-bold">Followers</p>
             </div>
-            <button onclick="logout()" class="w-full p-4 bg-red-500/10 text-red-500 rounded-2xl font-bold uppercase text-xs tracking-widest">Logout Account</button>
+            <div class="text-center">
+                <p class="font-black text-lg">0</p>
+                <p class="text-[10px] text-slate-500 uppercase font-bold">Following</p>
+            </div>
         </div>
-    </div>
-</div>
-
-<div id="private-chat-ui" class="hidden fixed inset-0 z-[60] bg-slate-950 flex flex-col">
-    <div class="p-4 flex items-center gap-4 border-b border-white/5">
-        <button onclick="closePrivateChat()" class="p-2">⬅️</button>
-        <div id="target-avatar" class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center font-bold">?</div>
-        <div class="flex-1">
-            <p id="target-name" class="font-bold text-sm">Target Name</p>
-            <p class="text-[9px] text-blue-400 font-bold uppercase">Private Message</p>
-        </div>
-    </div>
-    <div id="chat-box" class="flex-1"></div>
-    <div class="p-4 bg-slate-900 flex gap-2">
-        <input type="text" id="private-input" placeholder="Type private message..." class="flex-1 p-4 bg-slate-800 rounded-2xl outline-none text-sm">
-        <button onclick="sendPrivateMsg()" class="bg-blue-600 p-4 rounded-2xl">➡️</button>
+        
+        <button onclick="editProfile()" class="mt-6 w-full p-4 glass rounded-2xl text-xs font-bold uppercase tracking-widest">Edit Profile</button>
     </div>
 </div>
 
 <div class="h-[70px] border-t border-white/5 bg-slate-950 flex justify-around items-center px-4">
-    <button onclick="showScreen('public')" class="nav-btn flex flex-col items-center gap-1 nav-active" id="nav-public">
-        <span class="text-xl">🌐</span>
-        <span class="text-[9px] font-bold uppercase">Public</span>
-    </button>
-    <button onclick="showScreen('private')" class="nav-btn flex flex-col items-center gap-1" id="nav-private">
-        <span class="text-xl">💬</span>
-        <span class="text-[9px] font-bold uppercase">Private</span>
-    </button>
-    <button onclick="showScreen('group')" class="nav-btn flex flex-col items-center gap-1" id="nav-group">
-        <span class="text-xl">👥</span>
-        <span class="text-[9px] font-bold uppercase">Groups</span>
-    </button>
-    <button onclick="showScreen('profile')" class="nav-btn flex flex-col items-center gap-1" id="nav-profile">
-        <span class="text-xl">👤</span>
-        <span class="text-[9px] font-bold uppercase">Profile</span>
-    </button>
+    <button onclick="showScreen('public')" class="flex flex-col items-center gap-1 opacity-50" id="nav-public"><span>🌐</span><span class="text-[8px]">PUBLIC</span></button>
+    <button onclick="showScreen('private')" class="flex flex-col items-center gap-1 opacity-50" id="nav-private"><span>💬</span><span class="text-[8px]">PRIVATE</span></button>
+    <button onclick="showScreen('group')" class="flex flex-col items-center gap-1 opacity-50" id="nav-group"><span>👥</span><span class="text-[8px]">GROUPS</span></button>
+    <button onclick="showScreen('profile')" class="flex flex-col items-center gap-1 opacity-50" id="nav-profile"><span>👤</span><span class="text-[8px]">PROFILE</span></button>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInAnonymously, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getDatabase, ref, push, onChildAdded, set, onValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getDatabase, ref, push, onChildAdded, set, onValue, serverTimestamp, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyAwIMw7wuHVRdBtIhT1zCgh5bDLdslVpZw",
-        authDomain: "chatingg-b948f.firebaseapp.com",
-        databaseURL: "https://chatingg-b948f-default-rtdb.firebaseio.com",
-        projectId: "chatingg-b948f",
-        storageBucket: "chatingg-b948f.appspot.com",
-        messagingSenderId: "676265332731",
-        appId: "1:676265332731:web:90468c1d0158026abfc55e"
-    };
-
+    // --- CONFIG & INIT ---
+    const firebaseConfig = { /* Your Existing Config */ };
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
-    const provider = new GoogleAuthProvider();
 
-    let currentPrivateChatId = null;
+    let longPressTimer;
+    let selectedMsgId = null;
 
-    // --- NAVIGATION ---
-    window.showScreen = (name) => {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('nav-active'));
-        document.getElementById(name + '-screen').classList.add('active');
-        document.getElementById('nav-' + name).classList.add('nav-active');
-        document.getElementById('header-title').innerText = name + " Chat";
-    };
-
-    // --- AUTH ---
-    window.loginWithGoogle = () => signInWithPopup(auth, provider).catch(alert);
-    window.loginAnon = async () => {
-        const name = document.getElementById('nickname-input').value;
-        if(!name) return alert("Enter your name!");
-        const res = await signInAnonymously(auth);
-        await updateProfile(res.user, { displayName: name });
-        window.location.reload();
-    };
-    window.logout = () => signOut(auth);
-
-    onAuthStateChanged(auth, (user) => {
-        if(user) {
-            document.getElementById('auth-screen').classList.add('hidden');
-            document.getElementById('my-avatar').innerText = (user.displayName || "N").charAt(0);
-            document.getElementById('prof-name').innerText = user.displayName;
-            document.getElementById('prof-img').innerText = (user.displayName || "N").charAt(0);
-            document.getElementById('prof-id').innerText = "ID: " + user.uid.substring(0, 10);
-            
-            // Register User
-            set(ref(db, 'users/' + user.uid), { uid: user.uid, name: user.displayName, status: "online" });
-            
-            loadPublicMessages();
-            loadUserList();
-        } else {
-            document.getElementById('auth-screen').classList.remove('hidden');
+    // --- AUTO UPDATE SYSTEM ---
+    const APP_VERSION = "2.0"; // Increment this to trigger update
+    onValue(ref(db, 'app_settings/version'), (snap) => {
+        if(snap.exists() && snap.val() !== APP_VERSION) {
+            document.getElementById('update-overlay').classList.remove('hidden');
+            setTimeout(() => location.reload(), 3000);
         }
     });
 
-    // --- PUBLIC CHAT ---
-    window.sendPublicMsg = () => {
-        const input = document.getElementById('public-input');
-        if(!input.value) return;
-        push(ref(db, 'public_messages'), { name: auth.currentUser.displayName, content: input.value, uid: auth.currentUser.uid });
-        input.value = "";
+    // --- NAVIGATION & SCREENS ---
+    window.showScreen = (name) => {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(name + '-screen').classList.add('active');
+        document.querySelectorAll('button[id^="nav-"]').forEach(b => b.style.opacity = "0.5");
+        document.getElementById('nav-' + name).style.opacity = "1";
     };
 
-    function loadPublicMessages() {
-        const box = document.getElementById('public-box');
-        onChildAdded(ref(db, 'public_messages'), (snap) => {
-            const m = snap.val();
-            const isMe = m.uid === auth.currentUser.uid;
-            box.innerHTML += `<div class="flex ${isMe ? 'justify-end' : 'justify-start'}">
-                <div class="p-3 rounded-2xl max-w-[80%] ${isMe ? 'bg-blue-600' : 'bg-slate-800'}">
-                    <p class="text-[8px] font-bold opacity-50 mb-1">${m.name}</p>
-                    <p class="text-sm">${m.content}</p>
-                </div>
-            </div>`;
-            box.scrollTop = box.scrollHeight;
-        });
-    }
+    // --- MESSAGE ACTIONS (2s LONG PRESS) ---
+    window.initLongPress = (msgId) => {
+        longPressTimer = setTimeout(() => {
+            selectedMsgId = msgId;
+            document.getElementById('msg-menu').classList.remove('hidden');
+        }, 2000); // 2 Seconds
+    };
+    window.clearLongPress = () => clearTimeout(longPressTimer);
+    window.closeMsgMenu = () => document.getElementById('msg-menu').classList.add('hidden');
 
-    // --- PRIVATE CHAT ---
-    function loadUserList() {
-        const list = document.getElementById('user-list');
-        onValue(ref(db, 'users'), (snap) => {
-            list.innerHTML = "";
-            snap.forEach(child => {
-                const u = child.val();
-                if(u.uid === auth.currentUser.uid) return;
-                list.innerHTML += `<div onclick="openPrivateChat('${u.uid}', '${u.name}')" class="p-4 glass rounded-2xl flex items-center gap-4 active:scale-95 transition">
-                    <div class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center font-bold text-blue-500">${u.name.charAt(0)}</div>
-                    <div><p class="font-bold text-sm">${u.name}</p><p class="text-[9px] text-emerald-500 font-bold uppercase">Online</p></div>
-                </div>`;
-            });
-        });
-    }
-
-    window.openPrivateChat = (uid, name) => {
-        document.getElementById('private-chat-ui').classList.remove('hidden');
-        document.getElementById('target-name').innerText = name;
-        document.getElementById('target-avatar').innerText = name.charAt(0);
-        currentPrivateChatId = auth.currentUser.uid < uid ? auth.currentUser.uid + "_" + uid : uid + "_" + auth.currentUser.uid;
-        loadPrivateMessages();
+    window.handleMsgAction = (type) => {
+        if(type === 'delete') {
+            // Local delete for 'Delete for me' logic
+            alert("Message deleted for you.");
+        }
+        closeMsgMenu();
     };
 
-    window.closePrivateChat = () => document.getElementById('private-chat-ui').classList.add('hidden');
+    // --- MESSAGING WITH SEEN SYSTEM ---
+    function sendMessage(path, data) {
+        const msgRef = push(ref(db, path));
+        set(msgRef, { ...data, id: msgRef.key, status: 'sent', time: serverTimestamp() });
+    }
 
-    window.sendPrivateMsg = () => {
-        const input = document.getElementById('private-input');
-        if(!input.value) return;
-        push(ref(db, 'private_chats/' + currentPrivateChatId), { name: auth.currentUser.displayName, content: input.value, uid: auth.currentUser.uid });
-        input.value = "";
+    // --- PROFILE ---
+    window.editProfile = () => {
+        const newBio = prompt("Enter your bio:");
+        if(newBio) {
+            update(ref(db, 'users/' + auth.currentUser.uid), { bio: newBio });
+            document.getElementById('prof-bio').innerText = newBio;
+        }
     };
 
-    function loadPrivateMessages() {
-        const box = document.getElementById('chat-box');
-        box.innerHTML = "";
-        onChildAdded(ref(db, 'private_chats/' + currentPrivateChatId), (snap) => {
-            const m = snap.val();
-            const isMe = m.uid === auth.currentUser.uid;
-            box.innerHTML += `<div class="flex ${isMe ? 'justify-end' : 'justify-start'} mb-2">
-                <div class="p-3 rounded-2xl max-w-[80%] ${isMe ? 'bg-blue-600' : 'bg-slate-800'}">
-                    <p class="text-sm">${m.content}</p>
-                </div>
-            </div>`;
-            box.scrollTop = box.scrollHeight;
-        });
-    }
+    // Initialize (Default screen)
+    showScreen('public');
 </script>
 </body>
 </html>

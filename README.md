@@ -1,2 +1,2 @@
-# chating
-message 
+# nova ai
+ai platform 
